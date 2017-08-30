@@ -8,22 +8,22 @@ import sys
 import time
 
 import zmq
-
+import pickle
 #include <czmq.h>
 PING_PORT_NUMBER = 10002
-PING_MSG_SIZE    = 10
-PING_INTERVAL    = 1  # Once per second
+PING_MSG_SIZE = 1024
 
 def main():
-    print(socket.getaddrinfo('fe80::58f1:ff:fe00:7%nstack', 10002, socket.AF_UNSPEC, socket.SOCK_DGRAM, 0, socket.AI_PASSIVE))
+    info = socket.getaddrinfo('fe80::58f1:ff:fe00:7%nstack', 10002, socket.AF_UNSPEC,socket.SOCK_DGRAM,0, socket.AI_PASSIVE)
+    print(info)
     # Create UDP socket
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 
     # Ask operating system to let us do broadcasts from socket
-    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY,1)
 
     # Bind UDP socket to local port so we can receive pings
-    sock.bind(('fe80::58f1:ff:fe00:7%nstack', 10002,0,5))
+    sock.bind(info[0][4])
 
     # main ping loop
     # We use zmq_poll to wait for activity on the UDP socket, since
@@ -31,26 +31,17 @@ def main():
     # once a second, and we collect and report beacons that come in
     # from other nodes:
 
-    poller = zmq.Poller()
-    poller.register(sock, zmq.POLLIN)
-
-    # Send first ping right away
-    ping_at = time.time()
-
-    while True:
-        timeout = ping_at - time.time()
-        if timeout < 0:
-            timeout = 0
+    t, addrinfo = sock.recvfrom(PING_MSG_SIZE)
+    mss = pickle.loads(t)
+    for i in range(mss[0]):
         try:
-            events = dict(poller.poll(1000* timeout))
+            msg, addrinfo = sock.recvfrom(mss[1])
+            sock.sendto(b"OK",addrinfo)
         except KeyboardInterrupt:
             print("interrupted")
-            break
+     
 
-        # Someone answered our ping
-        if sock.fileno() in events:
-            msg, addrinfo = sock.recvfrom(PING_MSG_SIZE)
-            print("Found peer %s:%d" % addrinfo)
+    print("test finished.")
 
 
 if __name__ == '__main__':
