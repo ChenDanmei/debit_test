@@ -10,12 +10,15 @@ http://www.culte.org/listes/linux-31/2007-10/msg00008.html
 
 import socket
 import time
+import pickle
 
-N_PAQUET = 2560000
+N_PAQUET = 500
 PAQUET = b"t"
 T_PAQUET = 10
 DESTINATION = ('192.168.42.1', 10002)
 KO = 1024
+PING_MSG_SIZE = 2
+
 
 
 class handle():
@@ -35,17 +38,18 @@ class handle():
     def get_debit(self):
         soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         soc.bind(('', 5556))
-        v=[]
 
         mss = PAQUET*T_PAQUET
+        soc.sendto(pickle.dumps([N_PAQUET, T_PAQUET]), DESTINATION)
         self.restart()
         for j in range(N_PAQUET):
             soc.sendto(mss, DESTINATION)
+            soc.recvfrom(PING_MSG_SIZE)
         t = self.get_value()
-        v=N_PAQUET*T_PAQUET/(t*KO)
+        v=N_PAQUET*T_PAQUET/t
 
         print("Nombre de paquet",N_PAQUET, ", taille de paquet", T_PAQUET, "octets, destination", DESTINATION)
-        print("                                                   ------>", v, "kO/s")
+        print("                                                   ------>", v, "O/s")
 
 if __name__ == '__main__':
     server = handle()
