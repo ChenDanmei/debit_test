@@ -32,7 +32,7 @@ def main():
     sock.sendto(b"OK", addrinfo)
     mss = pickle.loads(t)
     num = mss[0]
-    for j in range(mss[2]):
+    for j in range(1,mss[2]+1):
         print("test {} starts.".format(j))
         for i in range(num):
             try:

@@ -54,7 +54,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode):
             n=n+limit[1]
 
             print("Nombre de paquet", n_paquet, ", taille de paquet", t_paquet, "octets, destination", destination)
-            print("                                                   ------>", v, "O/s")
+            print("                                                   ------>", v[j], "O/s")
 
         plot_debit(x,v,'debit_n_paquet.PNG')
 
