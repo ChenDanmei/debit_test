@@ -9,14 +9,15 @@ import time
 
 import zmq
 import pickle
+import click
 
 # include <czmq.h>
-PING_PORT_NUMBER = 10002
+
 PING_MSG_SIZE = 1024
 
 
-def main():
-    info = socket.getaddrinfo('fe80::58f1:ff:fe00:7%nstack', 10002, socket.AF_UNSPEC, socket.SOCK_DGRAM, 0,
+def test_debit(address,port):
+    info = socket.getaddrinfo(address, port, socket.AF_UNSPEC, socket.SOCK_DGRAM, 0,
                               socket.AI_PASSIVE)
     print(info)
     # Create UDP socket
@@ -60,6 +61,11 @@ def main():
 
     print("tests all finished.")
 
+@click.command()
+@click.option('--address', default='fe80::58f1:ff:fe00:7%nstack')
+@click.option('--port', default=10002, type=int)
+def main(address,port):
+    test_debit(address,port)
 
 if __name__ == '__main__':
     main()
