@@ -38,7 +38,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
         n = limit[0]
         v=[]
         x=[]
-        soc.sendto(pickle.dumps([n,t_paquet,loop,limit[1]],mode), destination)
+        soc.sendto(pickle.dumps([n,t_paquet,loop,limit[1]],1), destination)
         soc.recvfrom(PING_MSG_SIZE)
 
         for j in range(loop):
@@ -66,7 +66,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
         t = limit[0]
         v = []
         x = []
-        soc.sendto(pickle.dumps([t, n_paquet, loop, limit[1]],mode), destination)
+        soc.sendto(pickle.dumps([t, n_paquet, loop, limit[1]], 2), destination)
         soc.recvfrom(PING_MSG_SIZE)
 
         for j in range(loop):

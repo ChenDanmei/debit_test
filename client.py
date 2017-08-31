@@ -33,7 +33,7 @@ def main():
     mss = pickle.loads(t)
     num = mss[0]
     size = mss[1]
-    if mss[4] == 'n':
+    if mss[4] == 1:
         for j in range(1,mss[2]+1):
             print("test {} starts.".format(j))
             for i in range(num):
@@ -45,7 +45,7 @@ def main():
                     return
             num = num + mss[3]
             print("test {} finished.".format(j))
-    elif mss[4] == 't':
+    elif mss[4] == 2:
         for j in range(1,mss[2]+1):
             print("test {} starts.".format(j))
             for i in range(num):
