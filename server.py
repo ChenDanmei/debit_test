@@ -19,13 +19,16 @@ PAQUET = b"t"
 PING_MSG_SIZE = 2
 
 
-def plot_debit(x,y,name):
+def plot_debit(x,y,name,title,xname):
     fig,ax = plt.subplots()
     ax.plot(x,y)
     fig.savefig(name)
+    plt.title(title)
+    plt.xlabel(xname, fontproperties='SimHei')
+    plt.ylabel(u'debit (O/s)', fontproperties='SimHei')
 
 
-def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode):
+def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
     loop = int((limit[2]-limit[0])/limit[1])
     soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     soc.bind(('', port_pc))
@@ -56,7 +59,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode):
             print("Nombre de paquet", n_paquet, ", taille de paquet", t_paquet, "octets, destination", destination)
             print("                                                   ------>", v[j], "O/s")
 
-        plot_debit(x,v,'debit_n_paquet.PNG')
+        plot_debit(x,v,name,'debit with different n_paquet', u'n_paquet')
 
 # Default arguments
 MAIN_DEFAULTS = {
@@ -64,7 +67,8 @@ MAIN_DEFAULTS = {
                  'mode': 'h',
                  'limit': [100,100,1100],
                  'n_paquet': 100,
-                 't_paquet': 10
+                 't_paquet': 10,
+                 'name': 'debit.PNG'
                  }
 
 HELP_MSG = {
@@ -76,7 +80,8 @@ HELP_MSG = {
     'limit': """A list includes valuer minimum, interval and valuer maximum of test variable. It's useful for 
     mode 'n' or 't'.The default limit is is {!r}.""".format(MAIN_DEFAULTS['limit']),
     'n_paquet': 'Number of package. The default n_paquet valuer is {!r}.'.format(MAIN_DEFAULTS['n_paquet']),
-    't_paquet': 'Size of package. The default t_paquet valuer is {!r}.'.format(MAIN_DEFAULTS['t_paquet'])
+    't_paquet': 'Size of package. The default t_paquet valuer is {!r}.'.format(MAIN_DEFAULTS['t_paquet']),
+    'name': 'Name of the image of test result. The default name is {!r}.'.format(MAIN_DEFAULTS['name']),
 }
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], max_content_width=120)
 
@@ -89,7 +94,8 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], max_content_width=12
 @click.option('--limit', default=MAIN_DEFAULTS['limit'], help=HELP_MSG['limit'])
 @click.option('--n-paquet', default=MAIN_DEFAULTS['n_paquet'], help=HELP_MSG['n_paquet'])
 @click.option('--t-paquet', default=MAIN_DEFAULTS['t_paquet'], help=HELP_MSG['t_paquet'])
-def main(object,mode,limit,n_paquet,t_paquet):
+@click.option('--name', default=MAIN_DEFAULTS['name'], help=HELP_MSG['name'])
+def main(object,mode,limit,n_paquet,t_paquet,name):
     if mode != 'h':
         # if len(object)!= 1:
         #    raise ValueError("We will suggest you test only one Raspberry in this mode!")
@@ -99,7 +105,7 @@ def main(object,mode,limit,n_paquet,t_paquet):
         for dest in object:
             if len(dest) != 2:
                 raise ValueError("Must give the two ports, See \n", HELP_MSG['object'])
-            test = Process(target=get_debit, args=(dest[1], dest[0], limit, n_paquet, t_paquet, mode))
+            test = Process(target=get_debit, args=(dest[1], dest[0], limit, n_paquet, t_paquet, mode, name))
             # test.daemon = True
             test.start()
 
