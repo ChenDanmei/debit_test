@@ -14,6 +14,7 @@ import pickle
 from multiprocessing import Process
 import click
 import matplotlib.pyplot as plt
+import json
 
 PAQUET = b"t"
 PING_MSG_SIZE = 2
@@ -22,10 +23,10 @@ PING_MSG_SIZE = 2
 def plot_debit(x,y,name,title,xname):
     fig,ax = plt.subplots()
     ax.plot(x,y)
-    fig.savefig(name)
     plt.title(title)
     plt.xlabel(xname, fontproperties='SimHei')
     plt.ylabel(u'debit (O/s)', fontproperties='SimHei')
+    fig.savefig(name)
 
 
 def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
@@ -37,7 +38,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
         n = limit[0]
         v=[]
         x=[]
-        soc.sendto(pickle.dumps([n,t_paquet,loop,limit[1]]), destination)
+        soc.sendto(pickle.dumps([n,t_paquet,loop,limit[1]],mode), destination)
         soc.recvfrom(PING_MSG_SIZE)
 
         for j in range(loop):
@@ -51,8 +52,8 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
                 except KeyboardInterrupt:
                     print("interrupted!!!")
                     return
-            t = time.time()-y
-            v.append(n * t_paquet / t)
+            s = time.time()-y
+            v.append(n * t_paquet / s)
             x.append(n)
             n=n+limit[1]
 
@@ -61,14 +62,42 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
 
         plot_debit(x,v,name,'debit with different n_paquet', u'n_paquet')
 
+    elif mode == 't':
+        t = limit[0]
+        v = []
+        x = []
+        soc.sendto(pickle.dumps([t, n_paquet, loop, limit[1]],mode), destination)
+        soc.recvfrom(PING_MSG_SIZE)
+
+        for j in range(loop):
+            print("Test starts: destination {d}, n_paquet {n}, t_paquet {t}.".format(d=destination, n=n_paquet, t=t))
+            mss = PAQUET * t
+            y = time.time()
+            for i in range(n_paquet):
+                try:
+                    soc.sendto(mss, destination)
+                    soc.recvfrom(PING_MSG_SIZE)
+                except KeyboardInterrupt:
+                    print("interrupted!!!")
+                    return
+            s = time.time() - y
+            v.append(n_paquet * t / s)
+            x.append(t)
+            t = t + limit[1]
+
+            print("Nombre de paquet", n_paquet, ", taille de paquet", t, "octets, destination", destination)
+            print("                                                   ------>", v[j], "O/s")
+
+        plot_debit(x, v, name, 'debit with different t_paquet', u't_paquet')
+
 # Default arguments
 MAIN_DEFAULTS = {
                  'object': [(('192.168.42.1', 10002),5556)],
                  'mode': 'h',
-                 'limit': [100,100,1100],
+                 'limit': '[100,100,1100]',
                  'n_paquet': 100,
                  't_paquet': 10,
-                 'name': 'debit.PNG'
+                 'name': ['debit.PNG']
                  }
 
 HELP_MSG = {
@@ -99,13 +128,17 @@ def main(object,mode,limit,n_paquet,t_paquet,name):
     if mode != 'h':
         # if len(object)!= 1:
         #    raise ValueError("We will suggest you test only one Raspberry in this mode!")
+        limit = json.loads(limit)
         if len(limit) != 3:
             raise ValueError("Limit valuer is confusing. See \n", HELP_MSG['limit'])
 
-        for dest in object:
-            if len(dest) != 2:
+        loop = len(object)
+        if loop != len(name):
+            raise ValueError("For each test of every Raspberry, it needs a name for the plot image. Must be different!")
+        for i in range(loop):
+            if len(object[i]) != 2:
                 raise ValueError("Must give the two ports, See \n", HELP_MSG['object'])
-            test = Process(target=get_debit, args=(dest[1], dest[0], limit, n_paquet, t_paquet, mode, name))
+            test = Process(target=get_debit, args=(object[i][1], object[i][0], limit, n_paquet, t_paquet, mode, name[i]))
             # test.daemon = True
             test.start()
 

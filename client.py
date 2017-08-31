@@ -32,17 +32,31 @@ def main():
     sock.sendto(b"OK", addrinfo)
     mss = pickle.loads(t)
     num = mss[0]
-    for j in range(1,mss[2]+1):
-        print("test {} starts.".format(j))
-        for i in range(num):
-            try:
-                msg, addrinfo = sock.recvfrom(mss[1])
-                sock.sendto(b"OK", addrinfo)
-            except KeyboardInterrupt:
-                print("interrupted")
-                return
-        num = num + mss[3]
-        print("test {} finished.".format(j))
+    size = mss[1]
+    if mss[4] == 'n':
+        for j in range(1,mss[2]+1):
+            print("test {} starts.".format(j))
+            for i in range(num):
+                try:
+                    msg, addrinfo = sock.recvfrom(mss[1])
+                    sock.sendto(b"OK", addrinfo)
+                except KeyboardInterrupt:
+                    print("interrupted")
+                    return
+            num = num + mss[3]
+            print("test {} finished.".format(j))
+    elif mss[4] == 't':
+        for j in range(1,mss[2]+1):
+            print("test {} starts.".format(j))
+            for i in range(num):
+                try:
+                    msg, addrinfo = sock.recvfrom(size)
+                    sock.sendto(b"OK", addrinfo)
+                except KeyboardInterrupt:
+                    print("interrupted")
+                    return
+            size = size + mss[3]
+            print("test {} finished.".format(j))
 
     print("tests all finished.")
 
