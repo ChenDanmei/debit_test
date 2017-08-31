@@ -31,14 +31,17 @@ def main():
     t, addrinfo = sock.recvfrom(PING_MSG_SIZE)
     sock.sendto(b"OK", addrinfo)
     mss = pickle.loads(t)
+    num = mss[0]
     for j in range(mss[2]):
-        for i in range(mss[0]):
+        print("test {} starts.".format(j))
+        for i in range(num):
             try:
                 msg, addrinfo = sock.recvfrom(mss[1])
                 sock.sendto(b"OK", addrinfo)
             except KeyboardInterrupt:
                 print("interrupted")
                 return
+        num = num + mss[3]
         print("test {} finished.".format(j))
 
     print("tests all finished.")
