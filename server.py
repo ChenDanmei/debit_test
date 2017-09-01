@@ -51,6 +51,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
                     soc.recvfrom(PING_MSG_SIZE)
                 except KeyboardInterrupt:
                     print("interrupted!!!")
+                    plot_debit(x, v, name, 'debit with different n_paquet', u'n_paquet')
                     return
             s = time.time()-y
             v.append(n * t_paquet / s)
@@ -79,6 +80,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
                     soc.recvfrom(PING_MSG_SIZE)
                 except KeyboardInterrupt:
                     print("interrupted!!!")
+                    plot_debit(x, v, name, 'debit with different n_paquet', u'n_paquet')
                     return
             s = time.time() - y
             v.append(n_paquet * t / s)
