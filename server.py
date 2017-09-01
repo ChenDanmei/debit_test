@@ -94,7 +94,7 @@ def get_debit(port_pc, destination, limit, n_paquet, t_paquet, mode, name):
 MAIN_DEFAULTS = {
                  'object': '[10002,5556]',
                  'gateway': '192.168.42.1',
-                 'mode': 'h',
+                 'mode': 't',
                  'limit': '[100,100,1100]',
                  'n_paquet': 100,
                  't_paquet': 10,
@@ -103,11 +103,11 @@ MAIN_DEFAULTS = {
 HELP_MSG = {
     'object': 'A list of udp port of Raspberry Pi and bind port of server itself. It decides we will test how '
               'many Raspberry Pi.The default object is {!r}.'.format(MAIN_DEFAULTS['object']),
-    'mode': """Test mode. If 'h', nothing tests. If 'n', it will test debit with different number of package; If 't',
+    'mode': """Test mode. If 'n', it will test debit with different number of package; If 't',
      it will test debit with different size of package. 
      The default mode  is {!r}.""".format(MAIN_DEFAULTS['mode']),
-    'limit': """A list includes valuer minimum, interval and valuer maximum of test variable. It's useful for 
-    mode 'n' or 't'.The default limit is is {!r}.""".format(MAIN_DEFAULTS['limit']),
+    'limit': """A list includes valuer minimum, interval and valuer maximum of test variable.
+    The default limit is is {!r}.""".format(MAIN_DEFAULTS['limit']),
     'n_paquet': 'Number of package. The default n_paquet valuer is {!r}.'.format(MAIN_DEFAULTS['n_paquet']),
     't_paquet': 'Size of package. The default t_paquet valuer is {!r}.'.format(MAIN_DEFAULTS['t_paquet']),
     'gateway': 'Ip of nBox-gateway. The default gateway is {!r}.'.format(MAIN_DEFAULTS['gateway'])
@@ -118,32 +118,31 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], max_content_width=12
 @click.command(help='This function is meant to test debit in different conditions.',
                context_settings=CONTEXT_SETTINGS)
 @click.option('--object', default=MAIN_DEFAULTS['object'], help=HELP_MSG['object'])
-@click.option('--mode', '-m', default=MAIN_DEFAULTS['mode'], type=click.Choice(['n', 't', 'h']),
+@click.option('--mode', '-m', default=MAIN_DEFAULTS['mode'], type=click.Choice(['n', 't']),
               help=HELP_MSG['mode'])
 @click.option('--limit', default=MAIN_DEFAULTS['limit'], help=HELP_MSG['limit'])
 @click.option('--n-paquet', default=MAIN_DEFAULTS['n_paquet'], help=HELP_MSG['n_paquet'])
 @click.option('--t-paquet', default=MAIN_DEFAULTS['t_paquet'], help=HELP_MSG['t_paquet'])
 @click.option('--gateway', default=MAIN_DEFAULTS['gateway'], help=HELP_MSG['gateway'])
 def main(object,mode,limit,n_paquet,t_paquet,gateway):
-    if mode != 'h':
-        # if len(object)!= 1:
-        #    raise ValueError("We will suggest you test only one Raspberry in this mode!")
-        limit = json.loads(limit)
-        object = json.loads(object)
-        if len(limit) != 3:
-            raise ValueError("Limit valuer is confusing. See \n", HELP_MSG['limit'])
+    # if len(object)!= 1:
+    #    raise ValueError("We will suggest you test only one Raspberry in this mode!")
+    limit = json.loads(limit)
+    object = json.loads(object)
+    if len(limit) != 3:
+        raise ValueError("Limit valuer is confusing. See \n", HELP_MSG['limit'])
 
-        loop = int(len(object)/2)
-        if len(object)%2 != 0:
-            raise ValueError("For each Raspberry Pi, give two ports, first is UDP port of Raspberry, "
-                             "second is bind port of server itself.")
+    loop = int(len(object)/2)
+    if len(object)%2 != 0:
+        raise ValueError("For each Raspberry Pi, give two ports, first is UDP port of Raspberry, "
+             "second is bind port of server itself.")
 
-        for i in range(loop):
-            destination = (gateway,object[i*2])
-            name = 'debit{}.PNG'.format(i)
-            test = Process(target=get_debit, args=(object[i*2+1], destination, limit, n_paquet, t_paquet, mode,name))
-            # test.daemon = True
-            test.start()
+    for i in range(loop):
+        destination = (gateway,object[i*2])
+        name = 'debit{}.PNG'.format(i)
+        test = Process(target=get_debit, args=(object[i*2+1], destination, limit, n_paquet, t_paquet, mode,name))
+        # test.daemon = True
+        test.start()
 
 if __name__ == '__main__':
     main()
